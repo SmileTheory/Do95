@@ -277,7 +277,7 @@ if { [catch {set demofiles [glob -directory $demopath *.LMP .lmp .Lmp]}] == 0} {
 
 namespace eval options {
 	variable iwad [lindex [dict keys $iwad_paths] 0]
-	variable pwad (NONE)
+	variable pwads (NONE)
 	variable skill [lindex $::doom_consts::skills 3]
 	variable level [lindex [dict get $::doom_consts::iwad_level_names $::options::iwad] 0]
 	variable deathmatch 0
@@ -406,7 +406,7 @@ pack [ttk::frame .c.gp.b] -side top -fill x
 bind .c.gp.iwad <<ComboboxSelected>> iwad_cmd
 
 # Pwad bar
-grid [ttk::combobox .c.gp.pwadbar.pwad -state disabled -textvariable ::options::pwad] -row 1 -column 1 -sticky news
+grid [ttk::combobox .c.gp.pwadbar.pwad -state disabled -textvariable ::options::pwads] -row 1 -column 1 -sticky news
 grid [ttk::button .c.gp.pwadbar.browse -text "Browse..." -command pwad_browse_cmd]  -row 1 -column 2
 grid columnconfigure .c.gp.pwadbar 1 -weight 1
 
@@ -449,13 +449,20 @@ iwad_cmd
 proc pwad_browse_cmd {} {
 	global pwad_paths
 
-	set path [tk_getOpenFile -filetypes {{{Doom WAD File} {.WAD .wad .Wad}}}]
-	if {$path == ""} { return }
+	set paths [tk_getOpenFile -multiple 1 -filetypes {{{Doom WAD File} {.WAD .wad .Wad}}}]
+	if {$paths == ""} { return }
 
-	set ::options::pwad [file rootname [file tail $path]]
+	set ::options::pwads [list]
+	set lastpath "."
+
+	foreach path $paths {
+		lappend ::options::pwads [file rootname [file tail $path]]
+		set lastpath $path
+	}
 
 	set pwad_paths [dict create]
-	foreach path [glob -directory [file dirname $path] *.WAD .wad .Wad] {
+	dict set pwad_paths (NONE) ""
+	foreach path [glob -directory [file dirname $lastpath] *.WAD .wad .Wad] {
 		dict set pwad_paths [file rootname [file tail $path]] $path
 	}
 
@@ -644,11 +651,11 @@ proc newgame_cmd {} {
 		lappend params [dict get $iwad_paths $::options::iwad]
 	}
 
-	if {$::options::pwad != "(NONE)"} {
+	if {$::options::pwads != "(NONE)"} {
 		lappend params "-file"
-		puts what
-		puts $pwad_paths
-		lappend params [dict get $pwad_paths $::options::pwad]
+		foreach pwad $::options::pwads {
+			lappend params [dict get $pwad_paths $pwad]
+		}
 	}
 
 	if {$::options::playdemo == "" && $::options::loadgame == 0} {
