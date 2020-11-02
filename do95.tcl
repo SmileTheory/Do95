@@ -296,38 +296,46 @@ namespace eval options {
 	variable nostalgia 0
 }
 
+set exes [list \
+	crispy-doom \
+	chocolate-doom \
+	prboom-plus \
+	glboom-plus \
+	woof \
+	doomretro \
+	gzdoom \
+	eternity \
+	k8vavoom \
+	zandronum \
+	zdaemon \
+	odamex \
+	doom2 \
+	doom \
+]
+
+set test_exe_paths .
+set ext ""
 switch $::tcl_platform(platform) {
 	windows {
-		set exepaths [list \
-			".\\crispy-doom.exe" \
-			".\\chocolate-doom.exe" \
-			".\\prboom-plus.exe" \
-			".\\glboom-plus.exe" \
-			".\\woof.exe" \
-			".\\doom.exe" \
-			".\\doomretro.exe" \
-			".\\gzdoom.exe" \
-			".\\Eternity.exe" \
-			".\\k8vavoom.exe" \
-			".\\src\\crispy-doom.exe" \
-			".\\src\\chocolate-doom.exe" \
-		]
+		lappend test_exe_paths .\\src
+		set ext .exe
 	}
 	unix {
-		set exepaths [list \
-			"/bin/crispy-doom" \
-			"/bin/chocolate-doom" \
-			"/usr/bin/crispy-doom" \
-			"/usr/bin/chocolate-doom" \
-		]
+		lappend test_exe_paths /bin /usr/bin
+		set ext ""
 	}
 }
 
-foreach path $exepaths {
-	if {[file exists $path]} {
-		set exefile $path
-		break;
+set exefile ""
+foreach path $test_exe_paths {
+	foreach exe $exes {
+		set fullpath [file join $path $exe$ext]
+		if {[file exists $fullpath]} {
+			set exefile $fullpath
+			break;
+		}
 	}
+	if {$exefile != ""} {break}
 }
 
 if {$::argc > 0} {
@@ -340,9 +348,27 @@ if {$::argc > 0} {
 		if {$arg == "--nostalgia"} {
 			set ::options::nostalgia 1
 		}
+
+		if {$arg == "--force-exe-select"} {
+			set exefile ""
+		}
 	}
 }
 
+if {$exefile == ""} {
+	switch $::tcl_platform(platform) {
+		windows {
+			set exefile [tk_getOpenFile -title "Please select your Doom source port executable." -filetypes {{{Doom Executable} {.exe}}}]
+		}
+		unix {
+			set exefile [tk_getOpenFile -title "Please select your Doom source port executable."]
+		}
+	}
+}
+
+if {$exefile == ""} {
+	exit
+}
 
 wm title . "Do95"
 wm protocol . WM_DELETE_WINDOW { exit }
