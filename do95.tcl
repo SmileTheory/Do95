@@ -680,6 +680,10 @@ proc adv_ok_cmd {} {
 			set ::options::record ""
 			set ::options::playdemo $::adv_options::playdemo
 			set ::options::maxdemo 0
+
+			if {$::options::playdemo == "(NONE)"} {
+				set ::options::playdemo ""
+			}
 		}
 	}
 
