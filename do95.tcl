@@ -278,17 +278,20 @@ proc get_savedescs {} {
 	return $savedescs
 }
 
+set demonames [dict create]
+
 proc get_demonames {} {
-	set demonames [list (NONE)]
+	global demonames
+
+	set demonames [dict create]
 	set demopath "."
 
+	dict set demonames (NONE) ""
 	if { [catch {set demofiles [glob -directory $demopath *.LMP *.lmp *.Lmp]}] == 0} {
 		foreach path $demofiles {
-			lappend demonames [file rootname [file tail $path]]
+			dict set demonames [file rootname [file tail $path]] $path
 		}
 	}
-
-	return $demonames
 }
 
 #puts $iwad_paths
@@ -529,8 +532,10 @@ namespace eval adv_options {
 }
 
 proc advanced_cmd {} {
+	global demonames
+
 	set savedescs [get_savedescs]
-	set demonames [get_demonames]
+	get_demonames
 
 	set ::adv_options::loadgame $::options::loadgame
 	set ::adv_options::timer_enabled [expr $::options::timer ? 1 : 0]
@@ -591,7 +596,7 @@ proc advanced_cmd {} {
 
 	pack [ttk::labelframe .adv.nb.demo.play -text Play -padding "5 0 5 5"] -padx 5 -side top -fill x
 	pack [ttk::checkbutton .adv.nb.demo.play.enabled -onvalue 2 -variable ::adv_options::record_or_playdemo -text Enabled -command demo_enable_cmd] -side top -anchor w
-	pack [ttk::combobox .adv.nb.demo.play.select -values $demonames -state readonly -textvariable ::adv_options::playdemo] -side top -fill x
+	pack [ttk::combobox .adv.nb.demo.play.select -values [dict keys $demonames] -state readonly -textvariable ::adv_options::playdemo] -side top -fill x
 
 	pack [ttk::frame .adv.b] -pady 5 -side top -anchor e
 	grid [ttk::button .adv.b.button1 -text "OK" -command adv_ok_cmd] -padx 5 -row 1 -column 1 -sticky nsew
@@ -651,7 +656,6 @@ proc demo_enable_cmd {} {
 			.adv.nb.demo.record.name configure -state disabled
 			.adv.nb.demo.record.maxbar.s configure -state disabled
 			.adv.nb.demo.play.select configure -state readonly
-			.adv.nb.demo.play.select current 0
 		}
 	}
 }
@@ -690,6 +694,7 @@ proc newgame_cmd {} {
 	global exefile
 	global iwad_paths
 	global pwad_paths
+	global demonames
 
 	set params [list]
 
@@ -771,7 +776,7 @@ proc newgame_cmd {} {
 
 	if {$::options::playdemo != ""} {
 		lappend params "-playdemo"
-		lappend params $::options::playdemo
+		lappend params [dict get $demonames $::options::playdemo]
 	}
 
 	catch {exec $exefile {*}$params &}
