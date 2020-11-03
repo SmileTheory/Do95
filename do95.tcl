@@ -339,18 +339,19 @@ foreach path $test_exe_paths {
 }
 
 if {$::argc > 0} {
-	set skip 0
+	set prev_cmd ""
 	foreach arg $::argv {
-		if {$skip != 0} {
-			incr skip -1
-			continue
-		}
-		if {$arg == "--nostalgia"} {
-			set ::options::nostalgia 1
-		}
-
-		if {$arg == "--force-exe-select"} {
-			set exefile ""
+		if {[string match -* $arg]} {
+			switch $arg {
+				--nostalgia {
+					set ::options::nostalgia 1
+				}
+				--force-exe-select {
+					set exefile ""
+				}
+			}
+			set prev_cmd $arg
+		} else {
 		}
 	}
 }
