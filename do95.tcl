@@ -245,30 +245,50 @@ foreach path $testpaths {
 	}
 }
 
-set savedescs [list]
-set savepath "."
+proc get_savedescs {} {
+	global exefile
 
-for {set i 0} {$i < 6} {incr i} {
-	set path [file join $savepath doomsav$i.dsg]
-
-	if { [catch {open $path RDONLY} file]} {
-		lappend savedescs (NONE)
-		continue
+	set savepath "."
+	if {$::tcl_platform(platform) == "unix"} {
+		set exename [file rootname [file tail $exefile]]
+		switch $exename {
+			crispy-doom -
+			chocolate-doom {
+				set savepath [file join "~/.local" share $exename savegames [string tolower $::options::iwad].wad]
+			}
+		}
 	}
 
-	set data [read $file 24]
-	close $file
+	set savedescs [list]
 
-	lappend savedescs $data
+	for {set i 0} {$i < 6} {incr i} {
+		set path [file join $savepath doomsav$i.dsg]
+
+		if { [catch {open $path RDONLY} file]} {
+			lappend savedescs (NONE)
+			continue
+		}
+
+		set data [string trim [read $file 24]]
+		close $file
+
+		lappend savedescs $data
+	}
+
+	return $savedescs
 }
 
-set demonames [list (NONE)]
-set demopath "."
+proc get_demonames {} {
+	set demonames [list (NONE)]
+	set demopath "."
 
-if { [catch {set demofiles [glob -directory $demopath *.LMP .lmp .Lmp]}] == 0} {
-	foreach path $demofiles {
-		lappend demonames [file rootname [file tail $path]]
+	if { [catch {set demofiles [glob -directory $demopath *.LMP *.lmp *.Lmp]}] == 0} {
+		foreach path $demofiles {
+			lappend demonames [file rootname [file tail $path]]
+		}
 	}
+
+	return $demonames
 }
 
 #puts $iwad_paths
@@ -509,8 +529,8 @@ namespace eval adv_options {
 }
 
 proc advanced_cmd {} {
-	global savedescs
-	global demonames
+	set savedescs [get_savedescs]
+	set demonames [get_demonames]
 
 	set ::adv_options::loadgame $::options::loadgame
 	set ::adv_options::timer_enabled [expr $::options::timer ? 1 : 0]
