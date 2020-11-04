@@ -568,6 +568,7 @@ proc advanced_cmd {} {
 		#tk busy forget . 
 		destroy .adv
 	}
+	wm resizable .adv 0 0
 
 	pack [ttk::notebook .adv.nb -padding {5 5 5 5}] 
 	.adv.nb add [frame .adv.nb.game] -text Game
