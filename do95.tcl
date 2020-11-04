@@ -542,6 +542,10 @@ proc advanced_cmd {} {
 	set ::adv_options::timer $::options::timer
 	set ::adv_options::turbo_enabled [expr $::options::turbo ? 1 : 0]
 	set ::adv_options::turbo $::options::turbo
+
+	if {$::adv_options::timer == 0} {set ::adv_options::timer 1}
+	if {$::adv_options::turbo == 0} {set ::adv_options::turbo 10}
+
 	set ::adv_options::record_or_playdemo 0
 	if {$::options::record != ""} {
 		set ::adv_options::record_or_playdemo 1
@@ -551,6 +555,9 @@ proc advanced_cmd {} {
 	set ::adv_options::record $::options::record
 	set ::adv_options::maxdemo $::options::maxdemo
 	set ::adv_options::playdemo $::options::playdemo
+
+	if {$::adv_options::playdemo == ""} {set ::adv_options::playdemo [lindex [dict keys $demonames] 0]}
+	if {$::adv_options::maxdemo == 0} {set ::adv_options::maxdemo 128}
 
 	#tk busy hold .
 	#update
@@ -616,9 +623,6 @@ proc timer_enable_cmd {} {
 		}
 		1 {
 			.adv.nb.game.timed.b.timelimit configure -state enabled
-			if {$::adv_options::timer == 0} {
-				set ::adv_options::timer 1
-			}
 		}
 	}
 }
@@ -630,9 +634,6 @@ proc turbo_enable_cmd {} {
 		}
 		1 {
 			.adv.nb.game.turbo.b.factor configure -state enabled
-			if {$::adv_options::turbo == 0} {
-				set ::adv_options::turbo 10
-			}
 		}
 	}
 }
@@ -648,9 +649,6 @@ proc demo_enable_cmd {} {
 			.adv.nb.demo.record.name configure -state enabled
 			.adv.nb.demo.record.maxbar.s configure -state enabled
 			.adv.nb.demo.play.select configure -state disabled
-			if {$::adv_options::maxdemo == 0} {
-				set ::adv_options::maxdemo 128
-			}
 		}
 		2 {
 			.adv.nb.demo.record.name configure -state disabled
