@@ -245,12 +245,17 @@ foreach path $testpaths {
 	}
 }
 
+set num_saves 6
+set savefile_root doomsav
+
 proc get_savedescs {} {
 	global exefile
+	global num_saves
+
+	set exename [file rootname [file tail $exefile]]
 
 	set savepath "."
 	if {$::tcl_platform(platform) == "unix"} {
-		set exename [file rootname [file tail $exefile]]
 		switch $exename {
 			crispy-doom -
 			chocolate-doom {
@@ -261,8 +266,29 @@ proc get_savedescs {} {
 
 	set savedescs [list]
 
-	for {set i 0} {$i < 6} {incr i} {
-		set path [file join $savepath doomsav$i.dsg]
+	switch $exename {
+		crispy-doom -
+		prboom-plus -
+		glboom-plus {
+			set num_saves 8
+		}
+		default {
+			set num_saves 6
+		}
+	}
+
+	switch $exename {
+		prboom-plus -
+		glboom-plus {
+			set savefile_root prboom-plus-savegame
+		}
+		default {
+			set savefile_root doomsav
+		}
+	}
+
+	for {set i 0} {$i < $num_saves} {incr i} {
+		set path [file join $savepath $savefile_root$i.dsg]
 
 		if { [catch {open $path RDONLY} file]} {
 			lappend savedescs (NONE)
@@ -533,6 +559,7 @@ namespace eval adv_options {
 
 proc advanced_cmd {} {
 	global demonames
+	global num_saves
 
 	set savedescs [get_savedescs]
 	get_demonames
@@ -574,7 +601,7 @@ proc advanced_cmd {} {
 	.adv.nb add [frame .adv.nb.game] -text Game
 
 	pack [ttk::labelframe .adv.nb.game.load -text "Load Saved Game" -padding "5 0 5 5"] -padx 5 -side top -fill x
-	for {set i 0} {$i < 6} {incr i} {
+	for {set i 0} {$i < $num_saves} {incr i} {
 		pack [ttk::checkbutton .adv.nb.game.load.slot$i -text [lindex $savedescs $i] -onvalue [expr $i + 1] -variable ::adv_options::loadgame -width 44] -side top -anchor w
 
 		if {[lindex $savedescs $i] == "(NONE)"} {
