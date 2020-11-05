@@ -281,14 +281,22 @@ proc get_savedescs {} {
 		prboom-plus -
 		glboom-plus {
 			set savefile_root prboom-plus-savegame
+			set savefile_ext .dsg
+		}
+		doomretro {
+			set savefile_root [file join savegames [string tolower $::options::iwad] doomretro]
+			set savefile_ext .save
 		}
 		default {
 			set savefile_root doomsav
+			set savefile_ext .dsg
 		}
 	}
 
+	puts $savefile_root
+
 	for {set i 0} {$i < $num_saves} {incr i} {
-		set path [file join $savepath $savefile_root$i.dsg]
+		set path [file join $savepath $savefile_root$i$savefile_ext]
 
 		if { [catch {open $path RDONLY} file]} {
 			lappend savedescs (NONE)
