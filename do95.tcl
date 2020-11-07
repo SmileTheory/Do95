@@ -409,6 +409,12 @@ if {$::argc > 0} {
 			}
 			set prev_cmd $arg
 		} else {
+			switch $prev_cmd {
+				--exe {
+					set exefile $arg
+					set prev_cmd ""
+				}
+			}
 		}
 	}
 }
