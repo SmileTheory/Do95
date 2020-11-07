@@ -253,14 +253,49 @@ proc get_savedescs {} {
 	global num_saves
 
 	set exename [file rootname [file tail $exefile]]
+	set lcase_iwad [string tolower $::options::iwad]
 
-	set savepath "."
-	if {$::tcl_platform(platform) == "unix"} {
-		switch $exename {
-			crispy-doom -
-			chocolate-doom {
-				set savepath [file join "~/.local" share $exename savegames [string tolower $::options::iwad].wad]
+	set savepath .
+	switch $::tcl_platform(platform) {
+		windows {
+		}
+		unix {
+			switch $exename {
+				crispy-doom -
+				chocolate-doom -
+				woof {
+					set savepath [file join ~/.local share $exename]
+				}
+				prboom-plus -
+				odamex {
+					set savepath ~/.$exename
+				}
+				glboom-plus {
+					set savepath ~/.prboom-plus
+				}
+				doomretro -
+				gzdoom -
+				zandronum -
+				zdaemon -
+				eternity {
+					set savepath [file join ~/.config $exename]
+				}
 			}
+		}
+	}
+
+	switch $exename {
+		crispy-doom -
+		chocolate-doom {
+			if {$::tcl_platform(platform) == "unix"} {
+				set savepath [file join $savepath savegames $lcase_iwad.wad]
+			}
+		}
+		doomretro {
+			set savepath [file join $savepath savegames $lcase_iwad]
+		}
+		eternity {
+			set savepath [file join $savepath user $lcase_iwad]
 		}
 	}
 
@@ -269,8 +304,18 @@ proc get_savedescs {} {
 	switch $exename {
 		crispy-doom -
 		prboom-plus -
-		glboom-plus {
+		glboom-plus -
+		woof -
+		eternity -
+		odamex {
 			set num_saves 8
+		}
+		gzdoom -
+		zandronum -
+		zdaemon {
+			# These support more, but we currently don't get
+			# save file descriptions from them anyway.
+			set num_saves 9
 		}
 		default {
 			set num_saves 6
@@ -283,17 +328,33 @@ proc get_savedescs {} {
 			set savefile_root prboom-plus-savegame
 			set savefile_ext .dsg
 		}
+		woof {
+			set savefile_root woofsav
+			set savefile_ext .dsg
+		}
 		doomretro {
-			set savefile_root [file join savegames [string tolower $::options::iwad] doomretro]
+			set savefile_root doomretro
 			set savefile_ext .save
+		}
+		gzdoom -
+		zandronum -
+		zdaemon {
+			set savefile_root save
+			set savefile_ext .zds
+		}
+		eternity {
+			set savefile_root etersav
+			set savefile_ext .dsg
+		}
+		odamex {
+			set savefile_root odasv
+			set savefile_ext .ods
 		}
 		default {
 			set savefile_root doomsav
 			set savefile_ext .dsg
 		}
 	}
-
-	puts $savefile_root
 
 	for {set i 0} {$i < $num_saves} {incr i} {
 		set path [file join $savepath $savefile_root$i$savefile_ext]
@@ -303,10 +364,19 @@ proc get_savedescs {} {
 			continue
 		}
 
-		set data [string trim [read $file 24]]
+		switch $exename {
+			gzdoom {
+				# gzdoom saves are zipped, just put a generic name
+				set desc save$i.zds
+			}
+			default {
+				set desc [string trim [read $file 24]]
+			}
+		}
+
 		close $file
 
-		lappend savedescs $data
+		lappend savedescs $desc
 	}
 
 	return $savedescs
@@ -794,6 +864,7 @@ proc newgame_cmd {} {
 	}
 
 	if {$::options::loadgame} {
+		# AFAICT odamex doesn't support the -loadgame parameter
 		lappend params "-loadgame"
 		lappend params [expr $::options::loadgame - 1]
 	}
