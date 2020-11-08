@@ -532,7 +532,7 @@ pack .c
 
 grid [ttk::frame .c.l] -row 1 -column 1 -padx [expr $::options::nostalgia ? 5 : 0] -sticky nsew
 grid [ttk::labelframe .c.gp -text "Game Parameters" -padding {5 0 5 5}] -row 1 -column 2 -padx [expr $::options::nostalgia ? 5 : 0] -sticky nsew
-grid [ttk::frame .c.b] -row 2 -column 1 -columnspan 2 -sticky nsew
+grid [ttk::frame .c.b] -pady 5 -row 2 -column 1 -columnspan 2 -sticky nsew
 
 if {$::options::nostalgia} {
 	pack [ttk::label .c.l.label1 -text "Type of Game or Connection"] -side top -anchor w
@@ -581,13 +581,13 @@ pack [ttk::label .c.gp.label4 -text "Episode/Level"]  -side top -anchor w
 pack [ttk::combobox .c.gp.level -state readonly -width 38 -textvariable ::options::level] -side top -fill x
 pack [ttk::labelframe .c.gp.dmo -text "Deathmatch Options" -padding "5 0 5 5"]  -side top -fill x
 pack [ttk::labelframe .c.gp.mo -text "Monster Options" -padding "5 0 5 5"]  -side top -fill x
-pack [ttk::frame .c.gp.b] -side top -fill x
+pack [ttk::frame .c.gp.b] -pady "5 0" -side top -fill x
 
 bind .c.gp.iwad <<ComboboxSelected>> iwad_cmd
 
 # Pwad bar
-grid [ttk::combobox .c.gp.pwadbar.pwad -state disabled -textvariable ::options::pwads] -row 1 -column 1 -sticky news
-grid [ttk::button .c.gp.pwadbar.browse -text "Browse..." -command pwad_browse_cmd]  -row 1 -column 2
+grid [ttk::combobox .c.gp.pwadbar.pwad -state disabled -textvariable ::options::pwads] -padx "0 5" -row 1 -column 1 -sticky news
+grid [ttk::button .c.gp.pwadbar.browse -text "Browse..." -command pwad_browse_cmd] -padx "5 0" -row 1 -column 2
 grid columnconfigure .c.gp.pwadbar 1 -weight 1
 
 # Deathmatch Options
@@ -602,8 +602,8 @@ pack [ttk::checkbutton .c.gp.mo.fast -text "Fast Monsters" -variable ::options::
 pack [ttk::checkbutton .c.gp.mo.respawn -text "Respawn Monsters" -variable ::options::respawn] -side top -anchor w
 
 # Game Parameters - buttons
-grid [ttk::button .c.gp.b.advanced -text "Advanced..." -command advanced_cmd] -row 1 -column 1
-grid [ttk::button .c.gp.b.configuration -text "Configuration..." -command config_cmd] -row 1 -column 2
+grid [ttk::button .c.gp.b.advanced -text "Advanced..." -command advanced_cmd] -padx "0 5" -row 1 -column 1 -sticky nsew
+grid [ttk::button .c.gp.b.configuration -text "Configuration..." -command config_cmd] -padx "5 0" -row 1 -column 2 -sticky nsew
 grid columnconfigure .c.gp.b 1 -uniform 1 -weight 1
 grid columnconfigure .c.gp.b 2 -uniform 1 -weight 1
 
@@ -717,13 +717,13 @@ proc advanced_cmd {} {
 	pack [ttk::checkbutton .adv.nb.game.timed.enabled -text Enabled -variable ::adv_options::timer_enabled -command timer_enable_cmd] -side top -anchor w
 	pack [ttk::frame .adv.nb.game.timed.b] -side top -fill x
 	grid [ttk::spinbox .adv.nb.game.timed.b.timelimit -textvariable ::adv_options::timer -width 5 -wrap 1 -from 1 -to 999 -increment 1] -row 1 -column 1 -sticky ns
-	grid [ttk::label .adv.nb.game.timed.b.l -text "Minutes to run"] -row 1 -column 2 -sticky nsew
+	grid [ttk::label .adv.nb.game.timed.b.l -text "Minutes to run"] -padx 5 -row 1 -column 2 -sticky nsew
 
 	pack [ttk::labelframe .adv.nb.game.turbo -text "Turbo Boost" -padding "5 0 5 5"] -padx 5 -side top -fill x
 	pack [ttk::checkbutton .adv.nb.game.turbo.enabled -text Enabled -variable ::adv_options::turbo_enabled -command turbo_enable_cmd] -side top -anchor w
 	pack [ttk::frame .adv.nb.game.turbo.b] -side top -fill x
 	grid [ttk::spinbox .adv.nb.game.turbo.b.factor -textvariable ::adv_options::turbo -width 5 -wrap 1 -from 10 -to 400 -increment 1] -row 1 -column 1 -sticky ns
-	grid [ttk::label .adv.nb.game.turbo.b.l -text "Turbo boost"] -row 1 -column 2 -sticky nsew
+	grid [ttk::label .adv.nb.game.turbo.b.l -text "Turbo boost"] -padx 5 -row 1 -column 2 -sticky nsew
 
 	.adv.nb add [frame .adv.nb.demo] -text Demo
 	pack [ttk::labelframe .adv.nb.demo.record -text Record -padding "5 0 5 5"] -padx 5 -side top -fill x
@@ -731,7 +731,7 @@ proc advanced_cmd {} {
 	pack [ttk::entry .adv.nb.demo.record.name -width 24 -textvariable ::adv_options::record] -side top -fill x
 	pack [ttk::frame .adv.nb.demo.record.maxbar] -pady 5 -side top -fill x
 	grid [ttk::spinbox .adv.nb.demo.record.maxbar.s -textvariable ::adv_options::maxdemo -width 5 -wrap 1 -from 1 -to 999 -increment 1] -row 1 -column 1 -sticky ns
-	grid [ttk::label .adv.nb.demo.record.maxbar.l -text "Maximum file size in (KB)"] -row 1 -column 2 -sticky nsew
+	grid [ttk::label .adv.nb.demo.record.maxbar.l -text "Maximum file size in (KB)"] -padx 5 -row 1 -column 2 -sticky nsew
 
 	pack [ttk::labelframe .adv.nb.demo.play -text Play -padding "5 0 5 5"] -padx 5 -side top -fill x
 	pack [ttk::checkbutton .adv.nb.demo.play.enabled -onvalue 2 -variable ::adv_options::record_or_playdemo -text Enabled -command demo_enable_cmd] -side top -anchor w
