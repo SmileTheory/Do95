@@ -245,6 +245,24 @@ foreach path $testpaths {
 	}
 }
 
+proc get_gzdoom_save_desc {filename} {
+	if {[catch {package require vfs::zip}]} {
+		return [file rootname $filename]
+	}
+
+	set mnt_file [vfs::zip::Mount $filename zipmount]
+	cd zipmount
+
+	set f [open info.json RDONLY]
+	set data [read $f]
+	close $f
+
+	cd ..
+	vfs::zip::Unmount $mnt_file zipmount
+
+	return [string range [regexp -line -inline {\"Title\":.*,} $data] 11 end-3]
+}
+
 set num_saves 6
 set savefile_root doomsav
 
@@ -313,8 +331,7 @@ proc get_savedescs {} {
 		gzdoom -
 		zandronum -
 		zdaemon {
-			# These support more, but we currently don't get
-			# save file descriptions from them anyway.
+			# FIXME: Show more of these, maybe in a listbox?
 			set num_saves 9
 		}
 		default {
@@ -366,8 +383,11 @@ proc get_savedescs {} {
 
 		switch $exename {
 			gzdoom {
-				# gzdoom saves are zipped, just put a generic name
-				set desc save$i.zds
+				set desc [get_gzdoom_save_desc $path]
+			}
+			zdaemon {
+				seek $file 16
+				set desc [string trim [read $file 24]]
 			}
 			default {
 				set desc [string trim [read $file 24]]
