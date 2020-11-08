@@ -385,6 +385,24 @@ proc get_savedescs {} {
 			gzdoom {
 				set desc [get_gzdoom_save_desc $path]
 			}
+			zandronum {
+				fconfigure $file -translation binary
+				seek $file 8
+				while {[eof $file] == 0} {
+					binary scan [read $file 4] Iu length
+					set type [read $file 4]
+					if {$type == "tEXt"} {
+						set data [read $file $length]
+						set n [string first "\0" $data] 
+						if {[string range $data 0 $n-1] == "Title"} {
+							set desc [string range $data $n+1 end]
+						}
+					} else {
+						seek $file $length current
+					}
+					binary scan [read $file 4] Iu crc
+				}
+			}
 			zdaemon {
 				seek $file 16
 				set desc [string trim [read $file 24]]
