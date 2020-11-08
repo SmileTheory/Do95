@@ -266,9 +266,12 @@ proc get_gzdoom_save_desc {filename} {
 set num_saves 6
 set savefile_root doomsav
 
+set savemap [list]
+
 proc get_savedescs {} {
 	global exefile
 	global num_saves
+	global savemap
 
 	set exename [file rootname [file tail $exefile]]
 	set lcase_iwad [string tolower $::options::iwad]
@@ -316,8 +319,6 @@ proc get_savedescs {} {
 			set savepath [file join $savepath user $lcase_iwad]
 		}
 	}
-
-	set savedescs [list]
 
 	switch $exename {
 		crispy-doom -
@@ -373,10 +374,14 @@ proc get_savedescs {} {
 		}
 	}
 
+	set savemap [list]
+	set savedescs [list]
+
 	for {set i 0} {$i < $num_saves} {incr i} {
 		set path [file join $savepath $savefile_root$i$savefile_ext]
 
 		if { [catch {open $path RDONLY} file]} {
+			lappend savemap ""
 			lappend savedescs (NONE)
 			continue
 		}
@@ -414,6 +419,16 @@ proc get_savedescs {} {
 
 		close $file
 
+		switch $exename {
+			gzdoom -
+			zandronum -
+			zdaemon {
+				lappend savemap $path
+			}
+			default {
+				lappend savemap $i
+			}
+		}
 		lappend savedescs $desc
 	}
 
@@ -847,6 +862,7 @@ proc newgame_cmd {} {
 	global iwad_paths
 	global pwad_paths
 	global demonames
+	global savemap
 
 	set params [list]
 
@@ -904,7 +920,7 @@ proc newgame_cmd {} {
 	if {$::options::loadgame} {
 		# AFAICT odamex doesn't support the -loadgame parameter
 		lappend params "-loadgame"
-		lappend params [expr $::options::loadgame - 1]
+		lappend params [lindex $savemap $::options::loadgame-1]
 	}
 
 	if {$::options::timer != 0} {
