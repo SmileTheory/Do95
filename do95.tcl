@@ -394,13 +394,11 @@ proc get_savedescs {} {
 				fconfigure $file -translation binary
 				seek $file 8
 				while {[eof $file] == 0} {
-					binary scan [read $file 4] Iu length
-					set type [read $file 4]
+					binary scan [read $file 8] Iua4 length type
 					if {$type == "tEXt"} {
-						set data [read $file $length]
-						set n [string first "\0" $data] 
-						if {[string range $data 0 $n-1] == "Title"} {
-							set desc [string range $data $n+1 end]
+						set text [split [read $file $length] \0]
+						if {[lindex $text 0] == "Title"} {
+							set desc [lindex $text 1]
 						}
 					} else {
 						seek $file $length current
