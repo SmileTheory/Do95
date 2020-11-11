@@ -733,7 +733,7 @@ proc advanced_cmd {} {
 	wm resizable .adv 0 0
 
 	pack [ttk::notebook .adv.nb -padding {5 5 5 5}] 
-	.adv.nb add [frame .adv.nb.game] -text Game
+	.adv.nb add [ttk::frame .adv.nb.game] -text Game
 
 	pack [ttk::labelframe .adv.nb.game.load -text "Load Saved Game" -padding "5 0 5 5"] -padx 5 -side top -fill x
 	for {set i 0} {$i < $num_saves} {incr i} {
@@ -750,13 +750,13 @@ proc advanced_cmd {} {
 	grid [ttk::spinbox .adv.nb.game.timed.b.timelimit -textvariable ::adv_options::timer -width 5 -wrap 1 -from 1 -to 999 -increment 1] -row 1 -column 1 -sticky ns
 	grid [ttk::label .adv.nb.game.timed.b.l -text "Minutes to run"] -padx 5 -row 1 -column 2 -sticky nsew
 
-	pack [ttk::labelframe .adv.nb.game.turbo -text "Turbo Boost" -padding "5 0 5 5"] -padx 5 -side top -fill x
+	pack [ttk::labelframe .adv.nb.game.turbo -text "Turbo Boost" -padding "5 0 5 5"] -padx 5 -pady "0 5" -side top -fill x
 	pack [ttk::checkbutton .adv.nb.game.turbo.enabled -text Enabled -variable ::adv_options::turbo_enabled -command turbo_enable_cmd] -side top -anchor w
 	pack [ttk::frame .adv.nb.game.turbo.b] -side top -fill x
 	grid [ttk::spinbox .adv.nb.game.turbo.b.factor -textvariable ::adv_options::turbo -width 5 -wrap 1 -from 10 -to 400 -increment 1] -row 1 -column 1 -sticky ns
 	grid [ttk::label .adv.nb.game.turbo.b.l -text "Turbo boost"] -padx 5 -row 1 -column 2 -sticky nsew
 
-	.adv.nb add [frame .adv.nb.demo] -text Demo
+	.adv.nb add [ttk::frame .adv.nb.demo] -text Demo
 	pack [ttk::labelframe .adv.nb.demo.record -text Record -padding "5 0 5 5"] -padx 5 -side top -fill x
 	pack [ttk::checkbutton .adv.nb.demo.record.enabled -onvalue 1 -variable ::adv_options::record_or_playdemo -text Enabled -command demo_enable_cmd] -side top -anchor w
 	pack [ttk::entry .adv.nb.demo.record.name -width 24 -textvariable ::adv_options::record] -side top -fill x
