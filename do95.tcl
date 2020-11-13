@@ -10,6 +10,14 @@ namespace eval doom_consts {
 	]
 
 	variable iwad_level_names [dict create]
+	dict set iwad_level_names CHEX [list \
+		"Episode 1, Map 1: \"Landing Zone\"" \
+		"Episode 1, Map 2: \"Storage Facility\"" \
+		"Episode 1, Map 3: \"Experimental Lab\"" \
+		"Episode 1, Map 4: \"Arboretum\"" \
+		"Episode 1, Map 5: \"Caverns of Bazoik\"" \
+	]
+
 	dict set iwad_level_names DOOM1 [list \
 		"Episode 1, Map 1: \"Hangar\"" \
 		"Episode 1, Map 2: \"Nuclear Plant\"" \
@@ -211,37 +219,39 @@ proc getSteamPaths {} {
 
 set testpaths [list]
 
-if {1 == 1} {
-	set path "."
-	
-	lappend testpaths [file join $path DOOM.WAD]
-	lappend testpaths [file join $path DOOM1.WAD]
-	lappend testpaths [file join $path DOOM2.WAD]
-	lappend testpaths [file join $path PLUTONIA.WAD]
-	lappend testpaths [file join $path TNT.WAD]
-}
+set wadnames [list \
+	DOOM \
+	DOOM1 \
+	DOOM2 \
+	PLUTONIA \
+	TNT \
+	CHEX
+]
+
+lappend testpaths "."
 
 set steampaths [getSteamPaths]
 
 foreach path $steampaths {
 	set common [file join $path steamapps common]
 
-	lappend testpaths [file join $common "Ultimate Doom" base DOOM.WAD]
-	lappend testpaths [file join $common "Doom 2" base DOOM2.WAD]
-	lappend testpaths [file join $common "Final Doom" base PLUTONIA.WAD]
-	lappend testpaths [file join $common "Final Doom" base TNT.WAD]
-	lappend testpaths [file join $common "DOOM 3 BFG Edition" base wads DOOM.WAD]
-	lappend testpaths [file join $common "DOOM 3 BFG Edition" base wads DOOM2.WAD]
+	lappend testpaths [file join $common "Ultimate Doom" base]
+	lappend testpaths [file join $common "Doom 2" base]
+	lappend testpaths [file join $common "Final Doom" base]
+	lappend testpaths [file join $common "DOOM 3 BFG Edition" base wads]
 }
 
 set iwad_paths [dict create]
 set pwad_paths [dict create]
 
-foreach path $testpaths {
-	set wadname [file rootname [file tail $path]]
+foreach wadname $wadnames {
+	foreach startpath $testpaths {
+		set path [file join $startpath $wadname.WAD]
 
-	if {![dict exists $iwad_paths $wadname] && [file exists $path]} {
-		dict set iwad_paths $wadname $path
+		if {[file exists $path]} {
+			dict set iwad_paths $wadname $path
+			break
+		}
 	}
 }
 
@@ -880,11 +890,16 @@ proc newgame_cmd {} {
 		set levelnum [lsearch [dict get $::doom_consts::iwad_level_names $::options::iwad] $::options::level]
 		if {$levelnum >= 0} {
 			lappend params "-warp"
-			if {$::options::iwad == "DOOM"} {
-				lappend params [expr $levelnum / 9 + 1] 
-				lappend params [expr $levelnum % 9 + 1]
-			} else {
-				lappend params [expr $levelnum + 1]
+			switch $::options::iwad {
+				DOOM -
+				DOOM1 -
+				CHEX {
+					lappend params [expr $levelnum / 9 + 1] 
+					lappend params [expr $levelnum % 9 + 1]
+				}
+				default {
+					lappend params [expr $levelnum + 1]
+				}
 			}
 		}
 
