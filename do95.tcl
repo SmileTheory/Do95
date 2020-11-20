@@ -201,12 +201,12 @@ proc getSteamPaths {} {
 
 	set configfile [file join $path "config" "config.vdf"]
 
-	if { [catch {open $configfile RDONLY} file]} {
+	if { [catch {open $configfile RDONLY} fp]} {
 		return $steampaths
 	}
 
-	set data [read $file]
-	close $file
+	set data [read $fp]
+	close $fp
 
 	set matches [regexp -all -line -inline {\mBaseInstallFolder.*\n} $data]
 	foreach line $matches {
@@ -390,7 +390,7 @@ proc get_savedescs {} {
 	for {set i 0} {$i < $num_saves} {incr i} {
 		set path [file join $savepath $savefile_root$i$savefile_ext]
 
-		if { [catch {open $path RDONLY} file]} {
+		if { [catch {open $path RDONLY} fp]} {
 			lappend savemap ""
 			lappend savedescs (NONE)
 			continue
@@ -401,31 +401,31 @@ proc get_savedescs {} {
 				set desc [get_gzdoom_save_desc $path]
 			}
 			zandronum {
-				fconfigure $file -translation binary
-				seek $file 8
-				while {[eof $file] == 0} {
-					binary scan [read $file 8] Iua4 length type
+				fconfigure $fp -translation binary
+				seek $fp 8
+				while {[eof $fp] == 0} {
+					binary scan [read $fp 8] Iua4 length type
 					if {$type == "tEXt"} {
-						set text [split [read $file $length] \0]
+						set text [split [read $fp $length] \0]
 						if {[lindex $text 0] == "Title"} {
 							set desc [lindex $text 1]
 						}
 					} else {
-						seek $file $length current
+						seek $fp $length current
 					}
-					binary scan [read $file 4] Iu crc
+					binary scan [read $fp 4] Iu crc
 				}
 			}
 			zdaemon {
-				seek $file 16
-				set desc [string trim [read $file 24]]
+				seek $fp 16
+				set desc [string trim [read $fp 24]]
 			}
 			default {
-				set desc [string trim [read $file 24]]
+				set desc [string trim [read $fp 24]]
 			}
 		}
 
-		close $file
+		close $fp
 
 		switch $exename {
 			gzdoom -
