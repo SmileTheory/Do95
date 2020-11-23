@@ -481,6 +481,15 @@ namespace eval options {
 	variable maxdemo 0
 	variable playdemo ""
 
+	variable server 0
+	variable privateserver 0
+	variable dedicated 0
+	variable autojoin 0
+	variable connect ""
+	variable port ""
+
+	variable gametype "Single Player Game"
+
 	variable nostalgia 0
 }
 
@@ -565,14 +574,26 @@ if {$exefile == ""} {
 	exit
 }
 
+set exename [file rootname [file tail $exefile]]
+
+set mp_support 0
+switch $exename {
+	chocolate-doom -
+	crispy-doom {
+		set mp_support 1
+	}
+}
+
+set twopane [expr $mp_support || $::options::nostalgia]
+
 wm title . "Do95"
 wm protocol . WM_DELETE_WINDOW { exit }
 wm resizable . 0 0
 ttk::frame .c -padding {5 5 5 5}
 pack .c
 
-grid [ttk::frame .c.l] -row 1 -column 1 -padx [expr $::options::nostalgia ? 5 : 0] -sticky nsew
-grid [ttk::labelframe .c.gp -text "Game Parameters" -padding {5 0 5 5}] -row 1 -column 2 -padx [expr $::options::nostalgia ? 5 : 0] -sticky nsew
+grid [ttk::frame .c.l] -row 1 -column 1 -padx [expr $twopane ? 5 : 0] -sticky nsew
+grid [ttk::labelframe .c.gp -text "Game Parameters" -padding {5 0 5 5}] -row 1 -column 2 -padx [expr $twopane ? 5 : 0] -sticky nsew
 grid [ttk::frame .c.b] -pady 5 -row 2 -column 1 -columnspan 2 -sticky nsew
 
 if {$::options::nostalgia} {
@@ -609,6 +630,28 @@ if {$::options::nostalgia} {
 
 	.c.l.mpg.name configure -text username
 	.c.l.mpg.gameplayersbar.gamename configure -text username
+} elseif {$twopane} {
+	pack [ttk::label .c.l.label1 -text "Type of Game or Connection"] -side top -anchor w
+	pack [ttk::combobox .c.l.gametype -state readonly -textvariable ::options::gametype] -side top -fill x
+	.c.l.gametype configure -values [list "Internet Game" "Single Player Game"]
+	.c.l.gametype current 1
+
+	# Multi-Player Game
+	pack [ttk::labelframe .c.l.mpg -text "Multi-Player Game" -padding "5 0 5 5"] -side top -anchor w
+	pack [ttk::checkbutton .c.l.mpg.server -text "Host server" -variable ::options::server -command gametype_server_cmd] -side top -anchor w
+	pack [ttk::checkbutton .c.l.mpg.privateserver -text "Private server" -variable ::options::privateserver] -side top -anchor w
+	#pack [ttk::checkbutton .c.l.mpg.dedicated -text "Dedicated server" -variable ::options::dedicated] -side top -anchor w
+	#pack [ttk::checkbutton .c.l.mpg.autojoin -text "Autojoin LAN server" -variable ::options::autojoin] -side top -anchor w
+	pack [ttk::frame .c.l.mpg.addressportbar] -side top -fill x
+
+	# Multi-Player Game - Server Address/Port
+	grid [ttk::label .c.l.mpg.addressportbar.label1 -text "Server address"] -row 1 -column 1 -sticky nsew
+	grid [ttk::label .c.l.mpg.addressportbar.label2 -text "Port"] -row 1 -column 2 -sticky nsew
+	grid [ttk::entry .c.l.mpg.addressportbar.connect -width 37 -textvariable ::options::connect] -row 2 -column 1 -sticky nsew
+	grid [ttk::entry .c.l.mpg.addressportbar.port -width 5 -textvariable ::options::port] -padx 5 -row 2 -column 2 -sticky nsew
+	grid columnconfigure .c.l.mpg.addressportbar 1 -weight 1
+
+	bind .c.l.gametype <<ComboboxSelected>> gametype_server_cmd
 }
 
 # Game Parameters
@@ -655,10 +698,54 @@ grid [ttk::button .c.b.button3 -text "Cancel" -command exit] -row 1 -column 4 -s
 grid columnconfigure .c.b 2 -uniform 1 -weight 1
 grid columnconfigure .c.b 3 -uniform 1 -weight 1
 grid columnconfigure .c.b 4 -uniform 1 -weight 1
-if {$::options::nostalgia} {
+if {$twopane} {
 	grid columnconfigure .c.b 1 -uniform 1 -weight 1
 	grid columnconfigure .c.b 5 -uniform 1 -weight 1
 }
+
+proc gametype_server_cmd {} {
+	global twopane
+	if {$::options::gametype == "Single Player Game"} {
+		if {$twopane} {
+			.c.l.mpg.server configure -state disabled
+			.c.l.mpg.privateserver configure -state disabled
+			#.c.l.mpg.dedicated configure -state disabled
+			#.c.l.mpg.autojoin configure -state disabled
+			.c.l.mpg.addressportbar.connect configure -state disabled
+			.c.l.mpg.addressportbar.port configure -state disabled
+		}
+		.c.gp.dmo.deathmatch configure -state disabled
+		.c.gp.dmo.altdeath configure -state disabled
+	} else {
+		if {$twopane} {
+			.c.l.mpg.server configure -state enabled
+		}
+
+		if {$::options::server} {
+			if {$twopane} {
+				.c.l.mpg.privateserver configure -state enabled
+				#.c.l.mpg.dedicated configure -state enabled
+				#.c.l.mpg.autojoin configure -state disabled
+				.c.l.mpg.addressportbar.connect configure -state disabled
+				.c.l.mpg.addressportbar.port configure -state disabled
+			}
+			.c.gp.dmo.deathmatch configure -state enabled
+			.c.gp.dmo.altdeath configure -state enabled
+		} else {
+			if {$twopane} {
+				.c.l.mpg.privateserver configure -state disabled
+				#.c.l.mpg.dedicated configure -state disabled
+				#.c.l.mpg.autojoin configure -state enabled
+				.c.l.mpg.addressportbar.connect configure -state enabled
+				.c.l.mpg.addressportbar.port configure -state enabled
+			}
+			.c.gp.dmo.deathmatch configure -state disabled
+			.c.gp.dmo.altdeath configure -state disabled
+		}
+	}
+}
+
+gametype_server_cmd
 
 proc iwad_cmd {} {
 	.c.gp.level configure -values [dict get $::doom_consts::iwad_level_names $::options::iwad]
@@ -867,6 +954,7 @@ proc config_cmd {} {
 
 proc newgame_cmd {} {
 	global exefile
+	global exename
 	global iwad_paths
 	global pwad_paths
 	global demonames
@@ -960,6 +1048,27 @@ proc newgame_cmd {} {
 		lappend params "-playdemo"
 		lappend params [dict get $demonames $::options::playdemo]
 	}
+
+	if {$::options::dedicated != 0} {
+		lappend params "-dedicated"
+	} elseif {$::options::server != 0} {
+		lappend params "-server"
+
+		if {$::options::privateserver != 0} {
+			lappend params "-privateserver"
+		}
+	} elseif {$::options::autojoin != 0} {
+		lappend params "-autojoin"
+	} elseif {$::options::connect != ""} {
+		lappend params "-connect"
+		lappend params $::options::connect
+
+		if {$::options::port != ""} {
+			lappend params "-port"
+			lappend params $::options::port
+		}
+	}
+
 
 	catch {exec $exefile {*}$params &}
 	#puts $exefile
