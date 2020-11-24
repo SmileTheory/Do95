@@ -510,6 +510,46 @@ set exes [list \
 	doom \
 ]
 
+dict set exe_params chocolate-doom dedicated dedicated
+dict set exe_params chocolate-doom server server
+dict set exe_params chocolate-doom privateserver privateserver
+dict set exe_params chocolate-doom autojoin autojoin
+dict set exe_params chocolate-doom connect connect
+dict set exe_params chocolate-doom clientport port
+dict set exe_params chocolate-doom serverport port
+
+dict set exe_params crispy-doom dedicated dedicated
+dict set exe_params crispy-doom server server
+dict set exe_params crispy-doom privateserver privateserver
+dict set exe_params crispy-doom autojoin autojoin
+dict set exe_params crispy-doom connect connect
+dict set exe_params crispy-doom clientport port
+dict set exe_params crispy-doom serverport port
+
+dict set exe_params doom dedicated dedicated
+dict set exe_params doom server server
+dict set exe_params doom privateserver privateserver
+dict set exe_params doom autojoin autojoin
+dict set exe_params doom connect connect
+dict set exe_params doom clientport port
+dict set exe_params doom serverport port
+
+dict set exe_params prboom-plus connect net
+
+dict set exe_params glboom-plus connect net
+
+dict set exe_params gzdoom server host
+dict set exe_params gzdoom privateserver private
+dict set exe_params gzdoom connect join
+dict set exe_params gzdoom serverport port
+
+#dict set exe_params zandronum server host
+#dict set exe_params zandronum privateserver private
+dict set exe_params zandronum connect connect
+#dict set exe_params zandronum serverport port
+
+dict set exe_params odamex connect connect
+
 set test_exe_paths .
 set ext ""
 switch $::tcl_platform(platform) {
@@ -576,13 +616,7 @@ if {$exefile == ""} {
 
 set exename [file rootname [file tail $exefile]]
 
-set mp_support 0
-switch $exename {
-	chocolate-doom -
-	crispy-doom {
-		set mp_support 1
-	}
-}
+set mp_support [dict exists $exe_params $exename connect]
 
 set twopane [expr $mp_support || $::options::nostalgia]
 
@@ -633,7 +667,7 @@ if {$::options::nostalgia} {
 } elseif {$twopane} {
 	pack [ttk::label .c.l.label1 -text "Type of Game or Connection"] -side top -anchor w
 	pack [ttk::combobox .c.l.gametype -state readonly -textvariable ::options::gametype] -side top -fill x
-	.c.l.gametype configure -values [list "Internet Game" "Single Player Game"]
+	.c.l.gametype configure -values [list "Multiplayer Game" "Single Player Game"]
 	.c.l.gametype current 1
 
 	# Multi-Player Game
@@ -704,44 +738,49 @@ if {$twopane} {
 }
 
 proc gametype_server_cmd {} {
+	global exename
+	global exe_params
 	global twopane
-	if {$::options::gametype == "Single Player Game"} {
-		if {$twopane} {
+	if {$twopane} {
+		if {$::options::gametype == "Single Player Game"} {
 			.c.l.mpg.server configure -state disabled
 			.c.l.mpg.privateserver configure -state disabled
 			#.c.l.mpg.dedicated configure -state disabled
 			#.c.l.mpg.autojoin configure -state disabled
 			.c.l.mpg.addressportbar.connect configure -state disabled
 			.c.l.mpg.addressportbar.port configure -state disabled
-		}
-		.c.gp.dmo.deathmatch configure -state disabled
-		.c.gp.dmo.altdeath configure -state disabled
-	} else {
-		if {$twopane} {
-			.c.l.mpg.server configure -state enabled
-		}
-
-		if {$::options::server} {
-			if {$twopane} {
-				.c.l.mpg.privateserver configure -state enabled
-				#.c.l.mpg.dedicated configure -state enabled
-				#.c.l.mpg.autojoin configure -state disabled
-				.c.l.mpg.addressportbar.connect configure -state disabled
-				.c.l.mpg.addressportbar.port configure -state disabled
-			}
-			.c.gp.dmo.deathmatch configure -state enabled
-			.c.gp.dmo.altdeath configure -state enabled
+			.c.gp.dmo.deathmatch configure -state disabled
+			.c.gp.dmo.altdeath configure -state disabled
 		} else {
-			if {$twopane} {
+			if {[dict exists $exe_params $exename server]} {
+				.c.l.mpg.server configure -state enabled
+				if {$::options::server} {
+					.c.l.mpg.privateserver configure -state enabled
+					#.c.l.mpg.dedicated configure -state enabled
+					#.c.l.mpg.autojoin configure -state enabled
+					.c.l.mpg.addressportbar.connect configure -state disabled
+					.c.l.mpg.addressportbar.port configure -state enabled
+				} else {
+					.c.l.mpg.privateserver configure -state disabled
+					#.c.l.mpg.dedicated configure -state disabled
+					#.c.l.mpg.autojoin configure -state disabled
+					.c.l.mpg.addressportbar.connect configure -state enabled
+					.c.l.mpg.addressportbar.port configure -state enabled
+				}
+			} else {
+				.c.l.mpg.server configure -state disabled
 				.c.l.mpg.privateserver configure -state disabled
 				#.c.l.mpg.dedicated configure -state disabled
-				#.c.l.mpg.autojoin configure -state enabled
+				#.c.l.mpg.autojoin configure -state disabled
 				.c.l.mpg.addressportbar.connect configure -state enabled
 				.c.l.mpg.addressportbar.port configure -state enabled
 			}
-			.c.gp.dmo.deathmatch configure -state disabled
-			.c.gp.dmo.altdeath configure -state disabled
+			.c.gp.dmo.deathmatch configure -state enabled
+			.c.gp.dmo.altdeath configure -state enabled
 		}
+	} else {
+		.c.gp.dmo.deathmatch configure -state disabled
+		.c.gp.dmo.altdeath configure -state disabled
 	}
 }
 
@@ -955,6 +994,7 @@ proc config_cmd {} {
 proc newgame_cmd {} {
 	global exefile
 	global exename
+	global exe_params
 	global iwad_paths
 	global pwad_paths
 	global demonames
@@ -974,7 +1014,11 @@ proc newgame_cmd {} {
 		}
 	}
 
-	if {$::options::playdemo == "" && $::options::loadgame == 0} {
+	if {$::options::server} {
+		set $::options::connect ""
+	}
+
+	if {$::options::playdemo == "" && $::options::loadgame == 0 && $::options::connect == ""} {
 		set levelnum [lsearch [dict get $::doom_consts::iwad_level_names $::options::iwad] $::options::level]
 		if {$levelnum >= 0} {
 			lappend params "-warp"
@@ -1049,23 +1093,40 @@ proc newgame_cmd {} {
 		lappend params [dict get $demonames $::options::playdemo]
 	}
 
-	if {$::options::dedicated != 0} {
-		lappend params "-dedicated"
-	} elseif {$::options::server != 0} {
-		lappend params "-server"
+	if {$::options::gametype != "Single Player Game"} {
+		if {$::options::dedicated != 0} {
+			if {[catch {dict get $exe_params $exename dedicated} param] == 0} {
+				lappend params -$param
+			}
+		} elseif {$::options::server != 0} {
+			if {[catch {dict get $exe_params $exename server} param] == 0} {
+				lappend params -$param
+			}
 
-		if {$::options::privateserver != 0} {
-			lappend params "-privateserver"
-		}
-	} elseif {$::options::autojoin != 0} {
-		lappend params "-autojoin"
-	} elseif {$::options::connect != ""} {
-		lappend params "-connect"
-		lappend params $::options::connect
-
-		if {$::options::port != ""} {
-			lappend params "-port"
-			lappend params $::options::port
+			if {$::options::privateserver != 0} {
+				if {[catch {dict get $exe_params $exename privateserver} param] == 0} {
+					lappend params -$param
+				}
+			}
+		} elseif {$::options::autojoin != 0} {
+			if {[catch {dict get $exe_params $exename autojoin} param] == 0} {
+				lappend params -$param
+			}
+		} elseif {$::options::connect != ""} {
+			if {[catch {dict get $exe_params $exename connect} param] == 0} {
+				lappend params -$param
+				if {$::options::port != ""} {
+					if {[catch {dict get $exe_params $exename clientport} param] == 0} {
+						lappend params $::options::connect
+						lappend params -$param
+						lappend params $::options::port
+					} else {
+						lappend params [string cat $::options::connect : $::options::port]
+					}
+				} else {
+					lappend params $::options::connect
+				}
+			}
 		}
 	}
 
